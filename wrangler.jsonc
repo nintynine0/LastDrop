@@ -1,0 +1,8 @@
+{
+  "name": "lastdrop",
+  "compatibility_date": "2026-09-14",
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "single-page-application"
+  }
+}
