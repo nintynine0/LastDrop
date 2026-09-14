@@ -1,17 +1,12 @@
-const CACHE='last-drop-aa69f372ffd7';
-const PRECACHE=["/assets/index-24T41LR-.js","/assets/index-Bi1P_GVz.css","/favicon.svg","/file.svg","/globe.svg","/icons/icon-192.png","/icons/icon-512.png","/index.html","/manifest.webmanifest","/recognition-core.mjs","/recognize.js","/window.svg"];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(PRECACHE)));});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('last-drop-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
-self.addEventListener('fetch',event=>{
- const request=event.request,url=new URL(request.url);if(request.method!=='GET')return;
- if(url.origin===self.location.origin){
-  if(url.pathname.startsWith('/api/'))return;
-  event.respondWith(caches.open(CACHE).then(async cache=>{
-   if(request.mode==='navigate')return (await cache.match('/index.html'))||fetch(request);
-   const saved=await cache.match(request);if(saved)return saved;
-   const response=await fetch(request);if(response.ok)await cache.put(request,response.clone());return response;
-  }));
- }else if(request.destination==='image'){
-  event.respondWith(caches.open(CACHE).then(async cache=>{const saved=await cache.match(request);if(saved)return saved;const response=await fetch(request);if(response.ok||response.type==='opaque'){try{await cache.put(request,response.clone());}catch{}}return response;}));
- }
+// Retire previously installed Last Drop workers. Do not remove this URL yet:
+// browsers with an old registration need it to recover even if the app cannot load.
+self.addEventListener('install',event=>event.waitUntil(self.skipWaiting()));
+self.addEventListener('activate',event=>{
+ event.waitUntil((async()=>{
+  await self.clients.claim();
+  const keys=await caches.keys();
+  await Promise.all(keys.filter(key=>key.startsWith('last-drop-')).map(key=>caches.delete(key)));
+  await self.registration.unregister();
+ })());
 });
+// No fetch handler: all requests, including redirects, go directly to the network.
